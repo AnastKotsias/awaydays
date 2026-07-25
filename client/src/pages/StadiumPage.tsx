@@ -1,22 +1,26 @@
+import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import type { SpotFilters } from "@/api/queries";
 import { useSpots, useStadium } from "@/api/queries";
 import { FixtureList } from "@/components/FixtureList";
+import { SpotFiltersPanel } from "@/components/SpotFilters";
 import { SpotList } from "@/components/SpotList";
 import { SpotMap } from "@/components/SpotMap";
 import { StatusMessage } from "@/components/StatusMessage";
 import { formatNumber } from "@/lib/format";
 
-/** Fixed for now; the next commit turns these into controls. */
-const DEFAULT_RADIUS = 2000;
+/** No categories selected means "all of them", matching the API's default. */
+const DEFAULT_FILTERS: SpotFilters = {
+  categories: [],
+  radius: 2000,
+};
 
 export default function StadiumPage() {
   const { slug = "" } = useParams<{ slug: string }>();
+  const [filters, setFilters] = useState<SpotFilters>(DEFAULT_FILTERS);
 
   const stadiumQuery = useStadium(slug);
-  const spotsQuery = useSpots(slug, {
-    categories: [],
-    radius: DEFAULT_RADIUS,
-  });
+  const spotsQuery = useSpots(slug, filters);
 
   if (stadiumQuery.isPending) {
     return <StatusMessage title="Loading the ground…" />;
@@ -75,9 +79,16 @@ export default function StadiumPage() {
         </h2>
 
         <div className="grid gap-6 lg:grid-cols-[3fr_2fr]">
-          <SpotMap stadium={stadium} spots={spots} radius={DEFAULT_RADIUS} />
+          <SpotMap stadium={stadium} spots={spots} radius={filters.radius} />
 
-          <div>
+          <div className="flex flex-col gap-4">
+            <SpotFiltersPanel
+              filters={filters}
+              onChange={setFilters}
+              resultCount={spots.length}
+              isFetching={spotsQuery.isFetching}
+            />
+
             {spotsQuery.error ? (
               <StatusMessage
                 title="Could not load nearby spots"
