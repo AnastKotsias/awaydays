@@ -6,17 +6,32 @@ then build and share your own away-day itinerary.
 
 Built as a university project by [Anastasis Kotsias](https://github.com/AnastKotsias).
 
-![The stadium page: map, radius circle, category pins and a filtered list of nearby spots](docs/screenshot.png)
+![The stadium page: a full-bleed dark map with the ground, its fixtures, a filtered list of nearby spots and the running itinerary floating over it](docs/screenshot.png)
+
+<details>
+<summary>More screens</summary>
+
+**Landing**
+![Landing page with an oversized headline, a marquee of upcoming fixtures and stat tiles](docs/screenshot-landing.png)
+
+**Itinerary builder** — stops scheduled backwards from kick-off
+![A timeline of three stops ending at kick-off, with times, dwell durations and walking legs](docs/screenshot-itinerary.png)
+
+</details>
 
 ## Tech stack
 
 | Layer    | Choice                                                    |
 | -------- | --------------------------------------------------------- |
 | Frontend | React + TypeScript, Vite, Tailwind CSS, TanStack Query     |
-| Maps     | React-Leaflet + OpenStreetMap (free, no API key)          |
+| Maps     | React-Leaflet, CARTO basemaps over OpenStreetMap data (free, no API key) |
 | Backend  | Node.js + Express, TypeScript, Zod validation              |
 | Database | PostgreSQL (Docker), Prisma ORM                            |
 | Auth     | JWT + bcrypt *(planned — phase 4)*                         |
+
+The interface is a brutalist, editorial direction: Anton for display, Archivo for
+body text, IBM Plex Mono for labels, acid green on near-black, square corners
+throughout. It ships in **dark and light**, switched from the header.
 
 ## Repository layout
 
@@ -31,10 +46,23 @@ awaydays/
 ├── client/              Vite + React single-page app
 │   └── src/
 │       ├── api/         typed fetch client and query hooks
-│       ├── components/  map, lists, filters
-│       └── pages/       one file per route
+│       ├── components/  map, lists, filters, itinerary dock
+│       ├── pages/       one file per route
+│       ├── plan/        itinerary state, timeline maths, share links
+│       └── theme/       dark/light switching
 └── docker-compose.yml   local PostgreSQL
 ```
+
+## Screens
+
+| Route                   | What it is                                          |
+| ----------------------- | --------------------------------------------------- |
+| `/`                     | Landing — fixtures marquee, stats                   |
+| `/grounds`              | Browse and search grounds                           |
+| `/stadiums/:slug`       | The map: fixtures, nearby spots, filters, itinerary |
+| `/stadiums/:slug/plan`  | Itinerary builder                                   |
+| `/p/:token`             | A shared itinerary, read-only                       |
+| `/signin`               | Members' gate *(presentation only — phase 4)*       |
 
 ## Getting started
 
@@ -111,12 +139,30 @@ meeting points in the seed are **invented sample data**, placed at realistic wal
 distances around each ground so the map and itinerary features can be built and demoed
 without a paid places API.
 
+### How the itinerary is scheduled
+
+Stops are timed **backwards from kick-off**, because the question worth answering
+is "what time do I have to leave", not "how long will this take". Every stay plus
+every walking leg is subtracted from kick-off (less 20 minutes to reach the
+turnstiles), and the first stop lands on whatever time is left.
+
+Walking legs are measured point-to-point with haversine rather than from each
+spot's distance to the ground — two spots 400 m out on opposite sides are 800 m
+apart, and the times should say so. See
+[`client/src/plan/timeline.ts`](client/src/plan/timeline.ts).
+
 ## Roadmap
 
 - [x] **Phase 1** — Database schema, seed data, REST API
 - [x] **Phase 2** — Map view with stadiums, fixtures and filtered nearby spots
-- [ ] **Phase 3** — Itinerary builder with shareable links
+- [x] **Phase 3a** — Itinerary builder and shareable links, client-side
+- [ ] **Phase 3b** — Persist itineraries through the API
 - [ ] **Phase 4** — Authentication, spot reviews, deployment
 
 The `Itinerary`, `ItineraryItem`, `User` and `SpotReview` tables already exist in the
-schema, so phases 3 and 4 are about endpoints and screens, not migrations.
+schema, so what remains is endpoints and wiring, not migrations.
+
+Until those endpoints exist, itineraries live in `localStorage` and a share link
+carries its whole payload in the URL — so a link genuinely opens on someone
+else's phone, at the cost of being long and impossible to revoke. Both are
+replaced by `Itinerary.shareId` in phase 3b.
