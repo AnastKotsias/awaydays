@@ -1,0 +1,214 @@
+// Away Days — database schema
+//
+// Read this top to bottom: it is the single source of truth for both the
+// PostgreSQL tables and the TypeScript types used across the API.
+// After changing anything here, run:  npm run db:migrate
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+
+  // These four settings make the generated client match this project's
+  // module setup (ESM + NodeNext), so imports resolve both under `tsx`
+  // in development and under plain `node dist/` after `npm run build`.
+  runtime                = "nodejs"
+  moduleFormat           = "esm"
+  generatedFileExtension = "ts"
+  importFileExtension    = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // The connection string is supplied by prisma.config.ts, which reads
+  // DATABASE_URL from .env.
+}
+
+// ---------------------------------------------------------------------------
+// Enums — values the database itself will enforce, so a typo can never be
+// stored. Far safer than a free-text column.
+// ---------------------------------------------------------------------------
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Sport {
+  FOOTBALL
+  BASKETBALL
+}
+
+enum SpotCategory {
+  SPORTS_BAR
+  LOCAL_FOOD
+  FAN_MEETING_POINT
+  PUB
+  CAFE
+}
+
+// ---------------------------------------------------------------------------
+// Models
+// ---------------------------------------------------------------------------
+
+model User {
+  id String @id @default(uuid())
+
+  email    String @unique
+  username String @unique
+
+  // Never store a plain password. The column name says what it holds so the
+  // mistake is hard to make by accident.
+  passwordHash String
+
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  itineraries Itinerary[]
+  reviews     SpotReview[]
+}
+
+model Stadium {
+  id String @id @default(uuid())
+
+  // Human-readable identifier used in URLs, e.g. /stadiums/oaka.
+  // Nicer to read and share than a random uuid.
+  slug String @unique
+
+  name    String
+  city    String
+  country String
+
+  latitude  Float
+  longitude Float
+  capacity  Int?
+  imageUrl  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  events Event[]
+  spots  Spot[]
+
+  @@index([city])
+}
+
+model Event {
+  id String @id @default(uuid())
+
+  // Teams are stored separately rather than as one "Panathinaikos vs Real
+  // Madrid" string, so the API can search or filter by a single team later.
+  homeTeam String
+  awayTeam String
+
+  sport     Sport
+  league    String
+  kickoffAt DateTime
+
+  stadiumId String
+  stadium   Stadium @relation(fields: [stadiumId], references: [id], onDelete: Cascade)
+
+  itineraries Itinerary[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Supports the two queries the app actually makes: upcoming fixtures
+  // overall, and fixtures at one stadium.
+  @@index([kickoffAt])
+  @@index([stadiumId, kickoffAt])
+}
+
+model Spot {
+  id String @id @default(uuid())
+
+  name        String
+  category    SpotCategory
+  description String?
+  address     String
+
+  latitude  Float
+  longitude Float
+
+  // 1 = cheap, 2 = mid, 3 = pricey. An integer (rather than "$" / "$$")
+  // means the API can filter with `<=` and sort by it.
+  priceLevel Int?
+  website    String?
+
+  stadiumId String
+  stadium   Stadium @relation(fields: [stadiumId], references: [id], onDelete: Cascade)
+
+  reviews        SpotReview[]
+  itineraryItems ItineraryItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([stadiumId, category])
+  @@index([latitude, longitude])
+}
+
+model SpotReview {
+  id String @id @default(uuid())
+
+  rating  Int // 1 to 5, enforced by the API before it reaches the database
+  comment String?
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  spotId String
+  spot   Spot   @relation(fields: [spotId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // One review per person per spot — the database rejects duplicates, so the
+  // rule holds even if the API has a bug.
+  @@unique([userId, spotId])
+  @@index([spotId])
+}
+
+model Itinerary {
+  id String @id @default(uuid())
+
+  // Separate from `id` so an itinerary can be shared by link without exposing
+  // the primary key, and so sharing can be revoked by rotating this value.
+  shareId String @unique @default(uuid())
+
+  title    String
+  isPublic Boolean @default(true)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  items ItineraryItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model ItineraryItem {
+  id String @id @default(uuid())
+
+  // Position of this stop in the plan: 1, 2, 3...
+  visitOrder Int
+  note       String?
+
+  itineraryId String
+  itinerary   Itinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
+
+  spotId String
+  spot   Spot   @relation(fields: [spotId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  // The same spot cannot be added to one itinerary twice.
+  @@unique([itineraryId, spotId])
+  @@index([itineraryId, visitOrder])
+}

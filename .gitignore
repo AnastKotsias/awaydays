@@ -22,3 +22,7 @@ npm-debug.log*
 
 # Local database volume
 .docker-data/
+
+# Prisma Client is generated from prisma/schema.prisma — regenerate it with
+# `npm run generate` rather than committing machine-specific output.
+server/src/generated/
