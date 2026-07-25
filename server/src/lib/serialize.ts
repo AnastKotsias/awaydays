@@ -22,6 +22,7 @@ export type StadiumDto = {
   name: string;
   city: string;
   country: string;
+  blurb: string | null;
   latitude: number;
   longitude: number;
   capacity: number | null;
@@ -35,6 +36,7 @@ export function toStadiumDto(stadium: StadiumModel): StadiumDto {
     name: stadium.name,
     city: stadium.city,
     country: stadium.country,
+    blurb: stadium.blurb,
     latitude: stadium.latitude,
     longitude: stadium.longitude,
     capacity: stadium.capacity,

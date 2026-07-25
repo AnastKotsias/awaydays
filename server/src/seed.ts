@@ -49,6 +49,7 @@ type SeedStadium = {
   name: string;
   city: string;
   country: string;
+  blurb: string;
   latitude: number;
   longitude: number;
   capacity: number;
@@ -62,6 +63,8 @@ const stadiums: SeedStadium[] = [
     name: "Olympic Stadium (OAKA)",
     city: "Athens",
     country: "Greece",
+    blurb:
+      "The big one. Marousi fills up two hours before kick-off, so eat before you get near the ground.",
     latitude: 38.0366,
     longitude: 23.7873,
     capacity: 69618,
@@ -134,6 +137,8 @@ const stadiums: SeedStadium[] = [
     name: "Karaiskakis Stadium",
     city: "Piraeus",
     country: "Greece",
+    blurb:
+      "Ten minutes from the harbour. Loud from the first whistle, and the mezedes are worth arriving early for.",
     latitude: 37.9447,
     longitude: 23.6656,
     capacity: 32115,
@@ -203,9 +208,11 @@ const stadiums: SeedStadium[] = [
   },
   {
     slug: "sef",
-    name: "Peace and Friendship Stadium (SEF)",
+    name: "Peace and Friendship Stadium",
     city: "Piraeus",
     country: "Greece",
+    blurb:
+      "EuroLeague nights in a concrete bowl by the sea. Tight, steep, and audible from three streets away.",
     latitude: 37.9424,
     longitude: 23.6617,
     capacity: 12373,
@@ -269,6 +276,8 @@ const stadiums: SeedStadium[] = [
     name: "Toumba Stadium",
     city: "Thessaloniki",
     country: "Greece",
+    blurb:
+      "The away end is close enough to hear the home end breathe. Bougatsa first, everything else after.",
     latitude: 40.6244,
     longitude: 22.972,
     capacity: 28701,
@@ -368,6 +377,7 @@ async function main() {
         name: stadium.name,
         city: stadium.city,
         country: stadium.country,
+        blurb: stadium.blurb,
         latitude: stadium.latitude,
         longitude: stadium.longitude,
         capacity: stadium.capacity,

@@ -79,6 +79,10 @@ model Stadium {
   city    String
   country String
 
+  /// One or two sentences of colour about visiting this ground — shown on the
+  /// browse cards. Editorial copy, not scraped data.
+  blurb String?
+
   latitude  Float
   longitude Float
   capacity  Int?

@@ -76,6 +76,9 @@ stadiumsRouter.get("/:slug", async (req, res) => {
         where: { kickoffAt: { gte: new Date() } },
         orderBy: { kickoffAt: "asc" },
       },
+      // Total spots logged here, independent of any radius filter — the
+      // header shows it next to the capacity.
+      _count: { select: { spots: true } },
     },
   });
 
@@ -86,6 +89,7 @@ stadiumsRouter.get("/:slug", async (req, res) => {
   res.json({
     data: {
       ...toStadiumDto(stadium),
+      spotCount: stadium._count.spots,
       events: stadium.events.map((event) => toEventDto(event)),
     },
   });
