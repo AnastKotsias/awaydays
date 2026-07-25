@@ -2,6 +2,8 @@ import express from "express";
 import cors from "cors";
 import { env } from "./env.js";
 import { errorHandler, notFoundHandler } from "./middleware/errors.js";
+import { eventsRouter } from "./routes/events.js";
+import { stadiumsRouter } from "./routes/stadiums.js";
 
 /**
  * Builds the Express application.
@@ -24,6 +26,9 @@ export function createApp() {
   app.get("/api/health", (_req, res) => {
     res.json({ status: "ok", uptime: process.uptime() });
   });
+
+  app.use("/api/stadiums", stadiumsRouter);
+  app.use("/api/events", eventsRouter);
 
   // Order matters: the 404 handler must come after every real route, and the
   // error handler must be registered last of all.
