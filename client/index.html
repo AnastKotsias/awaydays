@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -8,6 +8,30 @@
       name="description"
       content="Plan your away day: find the ground, then the bars, food and meeting points around it."
     />
+
+    <!--
+      Apply the saved theme before the first paint. Without this the page
+      renders in the default dark palette for one frame and then snaps to
+      light — the classic theme flash.
+    -->
+    <script>
+      try {
+        var saved = localStorage.getItem("awaydays.theme");
+        if (saved === "light" || saved === "dark") {
+          document.documentElement.dataset.theme = saved;
+        }
+      } catch (error) {
+        /* localStorage can throw in private mode — the default is fine. */
+      }
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+
     <title>Away Days — plan your trip to the game</title>
   </head>
   <body>

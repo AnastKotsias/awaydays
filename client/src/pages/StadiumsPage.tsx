@@ -13,33 +13,35 @@ export default function StadiumsPage() {
   const { data: stadiums, isPending, error } = useStadiums(debouncedSearch);
 
   return (
-    <section>
-      <h1 className="text-3xl font-bold tracking-tight text-white">
-        Pick your away day
-      </h1>
-      <p className="mt-2 max-w-2xl text-slate-400">
-        Choose a ground to see its upcoming fixtures and everything worth
-        visiting around it.
-      </p>
+    <section className="mx-auto max-w-330 px-6 pt-14 pb-24">
+      <div className="flex flex-wrap items-end justify-between gap-8">
+        <div>
+          <p className="font-mono text-[11px] uppercase tracking-[0.24em] text-acid">
+            The fixture list
+          </p>
+          <h1 className="mt-4 font-display text-[clamp(40px,6vw,76px)] leading-[0.92] uppercase tracking-[-0.02em]">
+            Pick your away day
+          </h1>
+        </div>
 
-      <div className="mt-6 max-w-md">
-        <label htmlFor="stadium-search" className="sr-only">
-          Search grounds by name or city
+        <label className="flex min-w-75 items-center gap-2.5 border-b-2 border-line pb-2 focus-within:border-acid">
+          <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-ink-3">
+            Find
+          </span>
+          <input
+            type="search"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="ground or city"
+            aria-label="Search grounds by name or city"
+            className="min-w-0 flex-1 border-0 bg-transparent text-[17px] text-ink outline-none placeholder:text-ink-3"
+          />
         </label>
-        <input
-          id="stadium-search"
-          type="search"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder="Search by ground or city…"
-          className="w-full rounded-lg border border-white/10 bg-night-900 px-4 py-2.5 text-white placeholder:text-slate-500 focus:border-pitch-500 focus:outline-none"
-        />
       </div>
 
-      <div className="mt-8">
+      <div className="mt-11">
         {isPending ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <SkeletonCard />
+          <div className="grid gap-5 lg:grid-cols-2">
             <SkeletonCard />
             <SkeletonCard />
           </div>
@@ -54,11 +56,13 @@ export default function StadiumsPage() {
             description="Try a city, or clear the box to see them all."
           />
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="grid gap-5 lg:grid-cols-2">
             {stadiums.map((stadium) => (
-              <StadiumCard key={stadium.id} stadium={stadium} />
+              <li key={stadium.id}>
+                <StadiumCard stadium={stadium} />
+              </li>
             ))}
-          </div>
+          </ul>
         )}
       </div>
     </section>

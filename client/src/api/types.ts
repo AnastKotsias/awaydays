@@ -22,6 +22,8 @@ export type Stadium = {
   name: string;
   city: string;
   country: string;
+  /** A sentence or two of colour about visiting this ground. */
+  blurb: string | null;
   latitude: number;
   longitude: number;
   capacity: number | null;
@@ -48,6 +50,8 @@ export type Event = {
 
 /** A single stadium with its upcoming fixtures attached. */
 export type StadiumDetail = Stadium & {
+  /** Every spot logged here, regardless of any radius filter. */
+  spotCount: number;
   events: Event[];
 };
 

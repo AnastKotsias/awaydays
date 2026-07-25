@@ -1,8 +1,6 @@
 import type { SpotFilters as Filters } from "@/api/queries";
 import type { SpotCategory } from "@/api/types";
-import { CATEGORY_META, formatDistance } from "@/lib/format";
-
-const ALL_CATEGORIES = Object.keys(CATEGORY_META) as SpotCategory[];
+import { CATEGORY_META, CATEGORY_ORDER, formatDistance } from "@/lib/format";
 
 const PRICE_OPTIONS: { label: string; value: number | undefined }[] = [
   { label: "Any", value: undefined },
@@ -34,22 +32,27 @@ export function SpotFiltersPanel({
   }
 
   return (
-    <div className="rounded-xl border border-white/10 bg-night-900 p-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-white">Filters</h3>
-        <p className="text-xs text-slate-400" aria-live="polite">
-          {isFetching ? "Searching…" : `${resultCount} spots found`}
+    <div className="border border-line bg-glass p-4.5 shadow-panel backdrop-blur-lg">
+      <div className="flex items-baseline justify-between">
+        <h2 className="font-display text-[17px] uppercase tracking-[0.02em]">
+          Filters
+        </h2>
+        <p
+          className="font-mono text-[10px] tracking-[0.12em] text-acid"
+          aria-live="polite"
+        >
+          {isFetching ? "Searching…" : `${resultCount} spots in range`}
         </p>
       </div>
 
-      {/* Categories: no selection means "everything", which matches how the
-          API treats a missing category parameter. */}
-      <fieldset className="mt-4">
-        <legend className="text-xs uppercase tracking-wide text-slate-500">
+      {/* No selection means "everything", matching how the API treats a
+          missing category parameter. */}
+      <fieldset>
+        <legend className="mt-4.5 font-mono text-[9px] uppercase tracking-[0.2em] text-ink-3">
           Category
         </legend>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {ALL_CATEGORIES.map((category) => {
+        <div className="mt-2.5 flex flex-wrap gap-1.5">
+          {CATEGORY_ORDER.map((category) => {
             const meta = CATEGORY_META[category];
             const isActive = filters.categories.includes(category);
 
@@ -59,49 +62,57 @@ export function SpotFiltersPanel({
                 type="button"
                 onClick={() => toggleCategory(category)}
                 aria-pressed={isActive}
-                className="rounded-full border px-3 py-1.5 text-xs font-medium transition"
+                className={[
+                  "flex cursor-pointer items-center gap-1.5 border px-2.5 py-1.5 font-mono text-[9px] font-medium uppercase tracking-[0.12em] transition-colors",
+                  isActive
+                    ? "bg-surface-2 text-ink"
+                    : "bg-transparent text-ink-3 hover:text-ink",
+                ].join(" ")}
                 style={{
-                  borderColor: isActive ? meta.colour : "rgba(255,255,255,0.12)",
-                  backgroundColor: isActive ? `${meta.colour}22` : "transparent",
-                  color: isActive ? meta.colour : "#94a3b8",
+                  borderColor: isActive ? meta.colour : "var(--line)",
                 }}
               >
-                {meta.icon} {meta.label}
+                <span
+                  aria-hidden="true"
+                  className="size-1.75"
+                  style={{ background: meta.colour }}
+                />
+                {meta.label}
               </button>
             );
           })}
         </div>
       </fieldset>
 
-      <div className="mt-5">
+      <div className="mt-5 flex items-baseline justify-between">
         <label
           htmlFor="radius"
-          className="flex items-center justify-between text-xs uppercase tracking-wide text-slate-500"
+          className="font-mono text-[9px] uppercase tracking-[0.2em] text-ink-3"
         >
           Within
-          <span className="font-semibold text-pitch-400 normal-case">
-            {formatDistance(filters.radius)}
-          </span>
         </label>
-        <input
-          id="radius"
-          type="range"
-          min={250}
-          max={5000}
-          step={250}
-          value={filters.radius}
-          onChange={(event) =>
-            onChange({ ...filters, radius: Number(event.target.value) })
-          }
-          className="mt-2 w-full accent-pitch-500"
-        />
+        <p className="font-mono text-xs font-semibold text-acid">
+          {formatDistance(filters.radius)}
+        </p>
       </div>
+      <input
+        id="radius"
+        type="range"
+        min={250}
+        max={5000}
+        step={250}
+        value={filters.radius}
+        onChange={(event) =>
+          onChange({ ...filters, radius: Number(event.target.value) })
+        }
+        className="mt-2.5 w-full accent-acid"
+      />
 
-      <fieldset className="mt-5">
-        <legend className="text-xs uppercase tracking-wide text-slate-500">
+      <fieldset>
+        <legend className="mt-4.5 font-mono text-[9px] uppercase tracking-[0.2em] text-ink-3">
           Max price
         </legend>
-        <div className="mt-2 flex gap-2">
+        <div className="mt-2.5 flex gap-1.5">
           {PRICE_OPTIONS.map((option) => {
             const isActive = filters.maxPrice === option.value;
 
@@ -111,11 +122,12 @@ export function SpotFiltersPanel({
                 type="button"
                 onClick={() => onChange({ ...filters, maxPrice: option.value })}
                 aria-pressed={isActive}
-                className={`flex-1 rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
+                className={[
+                  "flex-1 cursor-pointer border py-2 font-mono text-[10px] font-semibold tracking-[0.06em] transition-colors",
                   isActive
-                    ? "border-pitch-500 bg-pitch-500/15 text-pitch-300"
-                    : "border-white/10 text-slate-400 hover:border-white/25 hover:text-slate-200"
-                }`}
+                    ? "border-acid bg-acid text-acid-ink"
+                    : "border-line bg-transparent text-ink-3 hover:border-ink-3 hover:text-ink",
+                ].join(" ")}
               >
                 {option.label}
               </button>

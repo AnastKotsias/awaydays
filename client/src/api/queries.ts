@@ -2,12 +2,16 @@ import { useQuery } from "@tanstack/react-query";
 import { apiGet } from "@/api/client";
 import type {
   Envelope,
+  Event,
   Spot,
   SpotCategory,
   SpotSearchMeta,
   StadiumDetail,
   StadiumListItem,
 } from "@/api/types";
+
+/** The API's ceiling for a radius search — used to mean "every spot here". */
+export const MAX_RADIUS = 20_000;
 
 /**
  * Query keys, in one place.
@@ -21,7 +25,19 @@ export const queryKeys = {
   stadium: (slug: string) => ["stadium", slug] as const,
   spots: (slug: string, filters: SpotFilters) =>
     ["stadium", slug, "spots", filters] as const,
+  events: (limit: number) => ["events", { limit }] as const,
 };
+
+/** Upcoming fixtures across every ground — drives the landing page ticker. */
+export function useEvents(limit = 20) {
+  return useQuery({
+    queryKey: queryKeys.events(limit),
+    queryFn: ({ signal }) =>
+      apiGet<Envelope<Event[]>>("/api/events", { limit }, signal).then(
+        (body) => body.data,
+      ),
+  });
+}
 
 export function useStadiums(search?: string) {
   return useQuery({

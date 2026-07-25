@@ -1,53 +1,231 @@
 @import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
 
-/*
- * Tailwind v4 is configured in CSS rather than a tailwind.config.js file.
- * Everything declared in @theme becomes both a CSS variable and a utility
- * class, so `--color-pitch-500` can be used as `bg-pitch-500`, `text-pitch-500`
- * and so on. Naming the palette after the domain keeps components readable.
- */
-@theme {
-  --color-pitch-300: #6ee7b7;
-  --color-pitch-400: #34d399;
-  --color-pitch-500: #10b981;
-  --color-pitch-600: #059669;
-
-  --color-night-700: #1e293b;
-  --color-night-800: #172033;
-  --color-night-900: #0f172a;
-  --color-night-950: #060b18;
-}
-
-html {
+/* ---------------------------------------------------------------------------
+ * Design tokens
+ *
+ * Declared as ordinary CSS custom properties rather than straight into
+ * Tailwind's @theme, because the theme has to be swappable at runtime: the
+ * toggle flips `data-theme` on <html> and every token below re-resolves.
+ * The @theme inline block further down republishes them as utilities.
+ * ------------------------------------------------------------------------ */
+:root {
   color-scheme: dark;
+
+  --bg: #0b0d0c;
+  --bg2: #121614;
+  --surface: #161b18;
+  --surface2: #1d2320;
+
+  --line: rgba(255, 255, 255, 0.13);
+  --line2: rgba(255, 255, 255, 0.06);
+
+  --ink: #f2f1ec;
+  --ink2: #a7ada7;
+  --ink3: #767c77;
+
+  --acid: #b8ff3c;
+  --acid-ink: #0b0d0c;
+  --flare: #ff5a2b;
+
+  --glass: rgba(11, 13, 12, 0.86);
+  --shadow-panel: 0 24px 60px rgba(0, 0, 0, 0.55);
+
+  /* One colour per spot category, used by chips, list rails and map pins. */
+  --c-bar: #f5a524;
+  --c-food: #f5544a;
+  --c-meet: #4e8df7;
+  --c-pub: #b36bf5;
+  --c-cafe: #16c0ac;
 }
 
+[data-theme="light"] {
+  color-scheme: light;
+
+  --bg: #f1efe9;
+  --bg2: #e7e4dc;
+  --surface: #ffffff;
+  --surface2: #f7f5f0;
+
+  --line: rgba(20, 16, 14, 0.16);
+  --line2: rgba(20, 16, 14, 0.07);
+
+  --ink: #14100e;
+  --ink2: #57544e;
+  --ink3: #8a8781;
+
+  --acid: #3b7a19;
+  --acid-ink: #ffffff;
+  --flare: #d23c0c;
+
+  --glass: rgba(255, 255, 255, 0.9);
+  --shadow-panel: 0 20px 50px rgba(20, 16, 14, 0.16);
+
+  /* Darkened so the category colours keep their contrast on a light surface. */
+  --c-bar: #b45309;
+  --c-food: #be2c22;
+  --c-meet: #1d4ed8;
+  --c-pub: #7e22ce;
+  --c-cafe: #0f766e;
+}
+
+/* Alternate accents from the design. No UI exposes these — set
+   data-accent="orange" or "electric" on <html> to try one. */
+[data-accent="orange"] {
+  --acid: #ff5a2b;
+  --acid-ink: #0b0d0c;
+  --flare: #b8ff3c;
+}
+[data-accent="electric"] {
+  --acid: #4cc9ff;
+  --acid-ink: #0b0d0c;
+  --flare: #ff5a2b;
+}
+[data-theme="light"][data-accent="orange"] {
+  --acid: #c4380d;
+  --acid-ink: #ffffff;
+  --flare: #3b7a19;
+}
+[data-theme="light"][data-accent="electric"] {
+  --acid: #0b6e99;
+  --acid-ink: #ffffff;
+  --flare: #c4380d;
+}
+
+/* ---------------------------------------------------------------------------
+ * Tailwind theme
+ *
+ * `inline` is the important word: it makes the generated utilities emit
+ * `var(--ink)` rather than baking in the hex value, so `text-ink` follows the
+ * runtime theme swap instead of freezing at build time.
+ * ------------------------------------------------------------------------ */
+@theme inline {
+  --color-canvas: var(--bg);
+  --color-canvas-2: var(--bg2);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface2);
+  --color-glass: var(--glass);
+
+  --color-line: var(--line);
+  --color-line-soft: var(--line2);
+
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink2);
+  --color-ink-3: var(--ink3);
+
+  --color-acid: var(--acid);
+  --color-acid-ink: var(--acid-ink);
+  --color-flare: var(--flare);
+
+  --color-cat-bar: var(--c-bar);
+  --color-cat-food: var(--c-food);
+  --color-cat-meet: var(--c-meet);
+  --color-cat-pub: var(--c-pub);
+  --color-cat-cafe: var(--c-cafe);
+
+  --shadow-panel: var(--shadow-panel);
+
+  --font-display: "Anton", Impact, sans-serif;
+  --font-sans: "Archivo", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+/* ---------------------------------------------------------------------------
+ * Base
+ * ------------------------------------------------------------------------ */
 body {
-  @apply bg-night-950 text-slate-200 antialiased;
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Give keyboard users a visible, on-brand focus ring everywhere. */
+::selection {
+  background: var(--acid);
+  color: var(--acid-ink);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border-radius: 10px;
+}
+
 :focus-visible {
-  @apply outline-2 outline-offset-2 outline-pitch-400;
+  outline: 2px solid var(--acid);
+  outline-offset: 2px;
 }
 
-/* Leaflet ships its zoom and attribution controls at z-index 1000, which
-   would float them over the sticky site header. Drop them below it. */
+/* The marquee of upcoming fixtures on the landing page. Translating by half
+   the (duplicated) track width makes the loop seamless. */
+@keyframes ticker {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track {
+    animation: none !important;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Leaflet, restyled to match
+ *
+ * Loaded via the @import at the top of this file so these rules always come
+ * after Leaflet's own and win without !important gymnastics.
+ * ------------------------------------------------------------------------ */
+.leaflet-container {
+  background: var(--bg2);
+  font-family: var(--font-mono);
+}
+
+/* Leaflet puts its controls at z-index 1000, which would float them over the
+   sticky site header. */
 .leaflet-top,
 .leaflet-bottom {
   z-index: 400;
 }
 
-/* Leaflet popups are white by default; match the app's dark surface. */
-.leaflet-popup-content-wrapper,
-.leaflet-popup-tip {
-  @apply bg-night-800 text-slate-200;
+.leaflet-control-zoom a {
+  background: var(--glass) !important;
+  color: var(--ink) !important;
+  border-color: var(--line) !important;
+  backdrop-filter: blur(10px);
 }
 
-.leaflet-popup-content-wrapper {
-  @apply rounded-lg;
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: 2px;
+  box-shadow: var(--shadow-panel);
+}
+
+.leaflet-popup-content {
+  margin: 12px 14px;
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .leaflet-container a.leaflet-popup-close-button {
-  @apply text-slate-400;
+  color: var(--ink3);
+}
+
+.leaflet-control-attribution {
+  background: var(--glass) !important;
+  color: var(--ink3) !important;
+  font-size: 9px !important;
+}
+
+.leaflet-control-attribution a {
+  color: var(--ink2) !important;
 }
