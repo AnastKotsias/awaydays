@@ -27,6 +27,49 @@ export function distanceInMetres(
   return 2 * EARTH_RADIUS_M * Math.asin(Math.sqrt(a));
 }
 
+export type BoundingBox = {
+  minLatitude: number;
+  maxLatitude: number;
+  minLongitude: number;
+  maxLongitude: number;
+};
+
+/**
+ * The smallest latitude/longitude rectangle that fully contains a circle of
+ * `radiusMetres` around `origin`.
+ *
+ * Why bother, when `distanceInMetres` already answers the question? Because
+ * haversine cannot run inside an indexed SQL query — the database would have
+ * to compute it for every row. A `BETWEEN` on latitude and longitude *can*
+ * use an index, so the database cheaply narrows thousands of rows down to a
+ * handful, and the exact circular check happens in JavaScript afterwards.
+ *
+ * The rectangle is slightly larger than the circle, so it never misses a
+ * result; it only lets a few extra candidates through, which the precise
+ * haversine filter then discards.
+ */
+export function boundingBox(
+  origin: { latitude: number; longitude: number },
+  radiusMetres: number,
+): BoundingBox {
+  const metresPerDegreeLat = (Math.PI / 180) * EARTH_RADIUS_M;
+
+  // Longitude lines converge towards the poles. Guard against dividing by a
+  // cosine of ~0 at extreme latitudes, which would produce Infinity.
+  const cosLat = Math.max(Math.cos(toRadians(origin.latitude)), 1e-6);
+  const metresPerDegreeLng = metresPerDegreeLat * cosLat;
+
+  const latDelta = radiusMetres / metresPerDegreeLat;
+  const lngDelta = radiusMetres / metresPerDegreeLng;
+
+  return {
+    minLatitude: origin.latitude - latDelta,
+    maxLatitude: origin.latitude + latDelta,
+    minLongitude: origin.longitude - lngDelta,
+    maxLongitude: origin.longitude + lngDelta,
+  };
+}
+
 /**
  * Moves a coordinate by a number of metres north and east.
  *
