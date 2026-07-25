@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+
+    // NodeNext is how modern Node runs TypeScript-compiled ES modules.
+    // Consequence to remember: relative imports must carry a ".js" extension
+    // (e.g. `import { env } from "./env.js"`) even though the file on disk is
+    // "env.ts". That is the extension of the *compiled* file, and Node needs it.
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+
+    "rootDir": "src",
+    "outDir": "dist",
+
+    // Catch as many mistakes as possible at compile time.
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "declaration": false
+  },
+  "include": ["src/**/*.ts"]
+}
