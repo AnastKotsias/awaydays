@@ -1,8 +1,32 @@
-:root {
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  line-height: 1.5;
+@import "tailwindcss";
+
+/*
+ * Tailwind v4 is configured in CSS rather than a tailwind.config.js file.
+ * Everything declared in @theme becomes both a CSS variable and a utility
+ * class, so `--color-pitch-500` can be used as `bg-pitch-500`, `text-pitch-500`
+ * and so on. Naming the palette after the domain keeps components readable.
+ */
+@theme {
+  --color-pitch-300: #6ee7b7;
+  --color-pitch-400: #34d399;
+  --color-pitch-500: #10b981;
+  --color-pitch-600: #059669;
+
+  --color-night-700: #1e293b;
+  --color-night-800: #172033;
+  --color-night-900: #0f172a;
+  --color-night-950: #060b18;
+}
+
+html {
+  color-scheme: dark;
 }
 
 body {
-  margin: 0;
+  @apply bg-night-950 text-slate-200 antialiased;
+}
+
+/* Give keyboard users a visible, on-brand focus ring everywhere. */
+:focus-visible {
+  @apply outline-2 outline-offset-2 outline-pitch-400;
 }
