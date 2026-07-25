@@ -30,3 +30,24 @@ body {
 :focus-visible {
   @apply outline-2 outline-offset-2 outline-pitch-400;
 }
+
+/* Leaflet ships its zoom and attribution controls at z-index 1000, which
+   would float them over the sticky site header. Drop them below it. */
+.leaflet-top,
+.leaflet-bottom {
+  z-index: 400;
+}
+
+/* Leaflet popups are white by default; match the app's dark surface. */
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  @apply bg-night-800 text-slate-200;
+}
+
+.leaflet-popup-content-wrapper {
+  @apply rounded-lg;
+}
+
+.leaflet-container a.leaflet-popup-close-button {
+  @apply text-slate-400;
+}
