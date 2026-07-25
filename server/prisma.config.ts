@@ -11,7 +11,9 @@ export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
     path: "prisma/migrations",
-    seed: "tsx prisma/seed.ts",
+    // The seed lives under src/ so it is covered by `npm run typecheck`
+    // and compiled by `npm run build` like the rest of the code.
+    seed: "tsx src/seed.ts",
   },
   datasource: {
     url: env("DATABASE_URL"),
