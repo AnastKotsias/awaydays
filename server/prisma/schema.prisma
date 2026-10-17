@@ -183,8 +183,10 @@ model Itinerary {
   title    String
   isPublic Boolean @default(true)
 
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Nullable until authentication is implemented. Public itineraries are
+  // addressed by shareId; authenticated ownership can be added later.
+  userId String?
+  user   User?  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   eventId String
   event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)

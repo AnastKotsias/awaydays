@@ -19,6 +19,20 @@ async function getJson(path: string) {
   return { response, body };
 }
 
+async function requestJson(
+  path: string,
+  method: "POST" | "PATCH",
+  body: unknown,
+) {
+  const response = await fetch(`${baseUrl}${path}`, {
+    method,
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const parsed: unknown = await response.json();
+  return { response, body: parsed };
+}
+
 before(async () => {
   server = app.listen(0);
   await new Promise<void>((resolve) => {
@@ -45,6 +59,132 @@ describe("stadium API", () => {
     assert.ok(data.length > 0);
     assert.ok(data.every((stadium) => stadium.city === "Piraeus"));
     assert.ok(data.some((stadium) => stadium.slug === "karaiskakis"));
+  });
+
+  describe("itinerary API", () => {
+    it("creates, reads, updates, and deletes a public itinerary", async () => {
+      const eventsResult = await getJson("/api/events?limit=1");
+      const event = (
+        eventsResult.body as {
+          data: Array<{ id: string; stadium?: { slug: string } }>;
+        }
+      ).data[0];
+      assert.ok(event?.id);
+      assert.ok(event.stadium?.slug);
+
+      const spotsResult = await getJson(
+        `/api/stadiums/${event.stadium.slug}/spots?radius=20000&limit=2`,
+      );
+      const spots = (spotsResult.body as { data: Array<{ id: string }> }).data;
+      assert.ok(spots.length >= 2);
+      const firstSpot = spots[0];
+      const secondSpot = spots[1];
+      assert.ok(firstSpot?.id);
+      assert.ok(secondSpot?.id);
+
+      const created = await requestJson("/api/itineraries", "POST", {
+        eventId: event.id,
+        spotIds: [firstSpot.id, secondSpot.id],
+        title: "Test away day",
+      });
+      assert.equal(created.response.status, 201);
+
+      const createdData = (
+        created.body as {
+          data: {
+            shareId: string;
+            title: string;
+            items: Array<{ visitOrder: number }>;
+          };
+        }
+      ).data;
+      assert.equal(createdData.title, "Test away day");
+      assert.deepEqual(
+        createdData.items.map((item) => item.visitOrder),
+        [1, 2],
+      );
+
+      const read = await getJson(`/api/itineraries/${createdData.shareId}`);
+      assert.equal(read.response.status, 200);
+      assert.equal(
+        (read.body as { data: { shareId: string } }).data.shareId,
+        createdData.shareId,
+      );
+
+      const updated = await requestJson(
+        `/api/itineraries/${createdData.shareId}`,
+        "PATCH",
+        { title: "Updated away day", spotIds: [secondSpot.id] },
+      );
+      assert.equal(updated.response.status, 200);
+      const updatedData = (
+        updated.body as {
+          data: { title: string; items: Array<{ visitOrder: number }> };
+        }
+      ).data;
+      assert.equal(updatedData.title, "Updated away day");
+      assert.deepEqual(
+        updatedData.items.map((item) => item.visitOrder),
+        [1],
+      );
+
+      const deleted = await fetch(`${baseUrl}/api/itineraries/${createdData.shareId}`, {
+        method: "DELETE",
+      });
+      assert.equal(deleted.status, 204);
+
+      const afterDelete = await getJson(
+        `/api/itineraries/${createdData.shareId}`,
+      );
+      assert.equal(afterDelete.response.status, 404);
+    });
+
+    it("rejects duplicate and cross-stadium spots", async () => {
+      const eventsResult = await getJson("/api/events?limit=1");
+      const event = (
+        eventsResult.body as {
+          data: Array<{ id: string; stadium?: { slug: string } }>;
+        }
+      ).data[0];
+      assert.ok(event?.id);
+      assert.ok(event.stadium?.slug);
+
+      const sameStadium = await getJson(
+        `/api/stadiums/${event.stadium.slug}/spots?radius=20000&limit=1`,
+      );
+      const sameStadiumSpot = (
+        sameStadium.body as { data: Array<{ id: string }> }
+      ).data[0];
+      assert.ok(sameStadiumSpot?.id);
+
+      const duplicate = await requestJson("/api/itineraries", "POST", {
+        eventId: event.id,
+        spotIds: [sameStadiumSpot.id, sameStadiumSpot.id],
+      });
+      assert.equal(duplicate.response.status, 400);
+
+      const otherStadium = await getJson("/api/stadiums/oaka/spots?limit=1");
+      const otherSpot = (
+        otherStadium.body as { data: Array<{ id: string }> }
+      ).data[0];
+      assert.ok(otherSpot?.id);
+
+      const crossStadium = await requestJson("/api/itineraries", "POST", {
+        eventId: event.id,
+        spotIds: [otherSpot.id],
+      });
+      assert.equal(crossStadium.response.status, 400);
+    });
+
+    it("rejects malformed share ids and missing itineraries", async () => {
+      const malformed = await getJson("/api/itineraries/not-a-uuid");
+      assert.equal(malformed.response.status, 400);
+
+      const missing = await getJson(
+        "/api/itineraries/00000000-0000-0000-0000-000000000000",
+      );
+      assert.equal(missing.response.status, 404);
+    });
   });
 
   describe("geo calculations", () => {

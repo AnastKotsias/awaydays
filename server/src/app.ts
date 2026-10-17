@@ -3,6 +3,7 @@ import cors from "cors";
 import { env } from "./env.js";
 import { errorHandler, notFoundHandler } from "./middleware/errors.js";
 import { eventsRouter } from "./routes/events.js";
+import { itinerariesRouter } from "./routes/itineraries.js";
 import { stadiumsRouter } from "./routes/stadiums.js";
 
 /**
@@ -29,6 +30,7 @@ export function createApp() {
 
   app.use("/api/stadiums", stadiumsRouter);
   app.use("/api/events", eventsRouter);
+  app.use("/api/itineraries", itinerariesRouter);
 
   // Order matters: the 404 handler must come after every real route, and the
   // error handler must be registered last of all.
