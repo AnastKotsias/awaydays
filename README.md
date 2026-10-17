@@ -95,8 +95,10 @@ npm run dev                # http://localhost:5173
 | `server` | `npm run db:studio` | browse the database in a GUI                  |
 | `server` | `npm run db:reset`  | drop, re-migrate and re-seed                  |
 | `server` | `npm run typecheck` | type-check without building                   |
+| `server` | `npm test`          | run API, validation and geo tests             |
 | `client` | `npm run dev`       | Vite dev server                               |
 | `client` | `npm run build`     | type-check and produce a production bundle    |
+| `client` | `npm test`          | run itinerary, sharing and geo tests          |
 
 ## API
 
